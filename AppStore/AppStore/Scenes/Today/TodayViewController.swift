@@ -10,6 +10,8 @@ import UIKit
 
 class TodayViewController: UIViewController {
     
+    private var todayList: [Today] = []
+    
     private var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -29,17 +31,19 @@ class TodayViewController: UIViewController {
         collectionView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
+        
+        fetchData()
     }
 }
 
 extension TodayViewController: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 5
+        return todayList.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "todaycell", for: indexPath) as? TodayCollectionViewCell else { return UICollectionViewCell() }
-        cell.setup()
+        cell.setup(today: todayList[indexPath.item])
         return cell
     }
     
@@ -61,4 +65,23 @@ extension TodayViewController: UICollectionViewDelegateFlowLayout, UICollectionV
         return UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
     }
     
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let today = todayList[indexPath.row]
+        let vc = AppDetailViewController(today: today)
+        self.present(vc, animated: true)
+    }
+    
+}
+
+extension TodayViewController {
+    func fetchData() {
+        guard let url = Bundle.main.url(forResource: "Data/Today", withExtension: "plist") else { return }
+        do {
+            let data = try Data(contentsOf: url)
+            let result = try PropertyListDecoder().decode([Today].self, from: data)
+            todayList = result
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
 }
